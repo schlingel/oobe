@@ -1,0 +1,12 @@
+<project name="oobe">
+    <target name="compile">
+    </target>
+	
+	<macrodef name="htlatex">
+		<attribute name="src-file"></attribute>
+		<sequential>
+			<exec name="htlatex">
+			</exec>
+		</sequential>
+	</macrodef>
+</project>
