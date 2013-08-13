@@ -1,0 +1,27 @@
+<project name="oobe ant tasks" default="compile">
+	<property name="build.dir" value="build" />
+	<property name="src.dir" value="src" />
+	<property name="lib.dir" value="lib" />
+	
+	<path id="oobe.classpath">
+		<pathelement path="${java.class.path}/"/>
+		
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	
+	<target name="prepare">
+		<mkdir dir="${build.dir}"/>
+	</target>
+	
+	<target name="compile" depends="prepare">
+		<javac srcdir="${src.dir}" destdir="${build.dir}">
+			<classpath refid="oobe.classpath"/>
+		</javac>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build.dir}"></delete>
+	</target>
+</project>
