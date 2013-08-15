@@ -55,8 +55,12 @@ public class TemplatablePackager extends Task {
 
 		Element headerElem = contentElem.select(".maketitle").first();
 		Element titleElem = headerElem.select(".titleHead").first();
+		
+		
 		Element authorElem = headerElem.select(".author.cmr-12").first();
-		Element dateElem = headerElem.select(".date.cmr-12").first();
+		Element dateElem = headerElem.select(".date").first();
+		
+		headerElem.remove();
 		
 		addIfNotNull(titleElem, TITLE_NAME, articleData);
 		addIfNotNull(authorElem, AUTHOR_NAME, articleData);
@@ -77,16 +81,15 @@ public class TemplatablePackager extends Task {
 		String fileName = inputFile.getName();
 		File outputFile = new File(getOutputDir(), fileName);
 		
-		if(true) {
+		if(content != null) {
 			PrintWriter writer = new PrintWriter(new FileOutputStream(outputFile));
 			String contentHtml = getTemplateText();
-			System.out.println(contentHtml);
 			
 			for(String key : articleData.keySet()) {
 				contentHtml = contentHtml.replace(key, articleData.get(key));
 			}
 			
-			contentHtml = contentHtml.replace("%CONTENT%", content.html());
+			contentHtml = contentHtml.replace(CONTENT_NAME, content.html());
 			
 			writer.write(contentHtml);
 			writer.flush();
@@ -136,6 +139,11 @@ public class TemplatablePackager extends Task {
 	
 	@Override
 	public void execute() throws BuildException {
+		try {
+			processFile();
+		} catch(IOException e) {
+			throw new BuildException(e);
+		}
 	}
 
 	public String getInput() {
