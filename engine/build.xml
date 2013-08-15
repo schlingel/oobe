@@ -1,12 +1,65 @@
-<project name="oobe">
-    <target name="compile">
-    </target>
+<project name="oobe" default="publish">
+	<property file="config.properties" />
 	
-	<macrodef name="htlatex">
-		<attribute name="src-file"></attribute>
-		<sequential>
-			<exec name="htlatex">
-			</exec>
-		</sequential>
-	</macrodef>
+    <target name="prepare-blog-creation">
+        <mkdir dir="${build.dir}" />
+    	<mkdir dir="${build.dir}/pdf" />
+    </target>
+    
+    <target name="clean-blog-creation">
+    	<delete>
+    		<fileset dir=".">
+    			<patternset>
+    				<include name="**/*.log" />
+    				<include name="**/*.aux" />
+    				<include name="**/*.out" />
+    				<include name="**/*.tmp" />
+    			</patternset>
+    		</fileset>
+    	</delete>
+        
+    </target>
+
+	<target name="compile-articles">
+		<echo message="Reading tex files from ${articles.dir}" />
+		
+		<apply executable="pdflatex">
+			<fileset dir="${articles.dir}">
+				<patternset>
+					<include name="**/*.tex" />
+				</patternset>
+			</fileset>
+		</apply>
+		
+		<apply executable="htlatex">
+			<srcfile />
+			<arg value="${articles.dir}" />
+			<arg value="${articles.dir}" />
+			
+			<fileset dir="${articles.dir}">
+				<patternset>
+					<include name="**/*.tex" />
+				</patternset>
+			</fileset>
+		</apply>
+	</target>
+	
+	<target name="prepare-publishing">
+		<copy todir="${build.dir}/pdf">
+			<fileset dir=".">
+				<include name="**/*.pdf" />
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="publish" depends="compile-articles">
+		<antcall target="prepare-publishing" />
+		<antcall target="clean-blog-creation" />
+		<antcall target="push-to-server" />
+	</target>
+	
+	<target name="push-to-server">
+		<echo>TODO: write ftp target</echo>
+	</target>
+		
 </project>
