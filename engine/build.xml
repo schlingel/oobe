@@ -1,8 +1,14 @@
 <project name="oobe" default="publish">
 	<property file="config.properties" />
 	
-    <target name="prepare-blog-creation">
+	<target name="clean">
+		<delete dir="build" />
+	</target>
+	
+    <target name="prepare-blog-creation" depends="clean">
         <mkdir dir="${build.dir}" />
+    	<mkdir dir="${build.dir}/css" />
+    	<mkdir dir="${build.dir}/img" />
     	<mkdir dir="${build.dir}/pdf" />
     </target>
     
@@ -10,17 +16,18 @@
     	<delete>
     		<fileset dir=".">
     			<patternset>
-    				<include name="**/*.log" />
-    				<include name="**/*.aux" />
-    				<include name="**/*.out" />
-    				<include name="**/*.tmp" />
+    				<include name="*.log" />
+    				<include name="*.aux" />
+    				<include name="*.out" />
+    				<include name="*.tmp" />
+    				<include name="*.pdf" />
     			</patternset>
     		</fileset>
     	</delete>
         
     </target>
 
-	<target name="compile-articles">
+	<target name="compile-articles" depends="prepare-blog-creation">
 		<echo message="Reading tex files from ${articles.dir}" />
 		
 		<apply executable="pdflatex">
@@ -31,22 +38,19 @@
 			</fileset>
 		</apply>
 		
-		<apply executable="htlatex">
-			<srcfile />
+		<!-- TODO: Refactor code to run conditional target to be compatible to windows and *nix 
+		!-->
+		<exec executable="${build.web.windows}">
 			<arg value="${articles.dir}" />
-			<arg value="${articles.dir}" />
-			
-			<fileset dir="${articles.dir}">
-				<patternset>
-					<include name="**/*.tex" />
-				</patternset>
-			</fileset>
-		</apply>
+			<arg value="${basedir}\${build.dir}" />
+		</exec>
 	</target>
 	
 	<target name="prepare-publishing">
+		<echo message="${basedir}" />
+		
 		<copy todir="${build.dir}/pdf">
-			<fileset dir=".">
+			<fileset dir="${basedir}">
 				<include name="**/*.pdf" />
 			</fileset>
 		</copy>
