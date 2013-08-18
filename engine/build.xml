@@ -1,12 +1,69 @@
-<project name="oobe">
-    <target name="compile">
-    </target>
+<project name="oobe" default="publish">
+	<property file="config.properties" />
 	
-	<macrodef name="htlatex">
-		<attribute name="src-file"></attribute>
-		<sequential>
-			<exec name="htlatex">
-			</exec>
-		</sequential>
-	</macrodef>
+	<target name="clean">
+		<delete dir="build" />
+	</target>
+	
+    <target name="prepare-blog-creation" depends="clean">
+        <mkdir dir="${build.dir}" />
+    	<mkdir dir="${build.dir}/css" />
+    	<mkdir dir="${build.dir}/img" />
+    	<mkdir dir="${build.dir}/pdf" />
+    </target>
+    
+    <target name="clean-blog-creation">
+    	<delete>
+    		<fileset dir=".">
+    			<patternset>
+    				<include name="*.log" />
+    				<include name="*.aux" />
+    				<include name="*.out" />
+    				<include name="*.tmp" />
+    				<include name="*.pdf" />
+    			</patternset>
+    		</fileset>
+    	</delete>
+        
+    </target>
+
+	<target name="compile-articles" depends="prepare-blog-creation">
+		<echo message="Reading tex files from ${articles.dir}" />
+		
+		<apply executable="pdflatex">
+			<fileset dir="${articles.dir}">
+				<patternset>
+					<include name="**/*.tex" />
+				</patternset>
+			</fileset>
+		</apply>
+		
+		<!-- TODO: Refactor code to run conditional target to be compatible to windows and *nix 
+		!-->
+		<exec executable="${build.web.windows}">
+			<arg value="${articles.dir}" />
+			<arg value="${basedir}\${build.dir}" />
+		</exec>
+	</target>
+	
+	<target name="prepare-publishing">
+		<echo message="${basedir}" />
+		
+		<copy todir="${build.dir}/pdf">
+			<fileset dir="${basedir}">
+				<include name="**/*.pdf" />
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="publish" depends="compile-articles">
+		<antcall target="prepare-publishing" />
+		<antcall target="clean-blog-creation" />
+		<antcall target="push-to-server" />
+	</target>
+	
+	<target name="push-to-server">
+		<echo>TODO: write ftp target</echo>
+	</target>
+		
 </project>
