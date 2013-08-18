@@ -2,6 +2,7 @@ package at.fundev.oobe;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -17,27 +18,44 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-public class TemplatablePackager extends Task {
-	private static final String TITLE_NAME = "%TITLE%";
-	
-	private static final String AUTHOR_NAME = "%AUTHOR%";
-	
-	private static final String DATE_NAME = "%DATE%";
-	
-	private static final String CONTENT_NAME = "%CONTENT%";
-	
+import at.fundev.oobe.model.Metadata;
+import at.fundev.oobe.model.PostEntry;
+
+public class TemplatablePackager extends Task implements Constants {
 	private String input;
 	
 	private String template;
 	
 	private String outputDir;
 	
-	private void processFile() throws FileNotFoundException, IOException {
+	private String metaDataFile = META_DATA_JSON_FILE;
+	
+	private <T> void process() throws FileNotFoundException, IOException {
 		if(getInput() == null || getTemplate() == null) {
 			return;
 		}
 		
+		Metadata md = Metadata.fromFile(metaDataFile);
+		
 		File inputFile = new File(getInput());
+		
+		if(inputFile.isDirectory()) {
+			File[] inputFiles = inputFile.listFiles(new FileFilter() {
+				@Override
+				public boolean accept(File file) {
+					return file.getName().endsWith(".html");
+				}
+			});
+			
+			for(File htmlFile : inputFiles) {
+				processInputFile(htmlFile, md);
+			}
+		} else {
+			processInputFile(inputFile, md);			
+		}
+	}
+	
+	private void processInputFile(File inputFile, Metadata md) throws IOException {
 		File templateFile = new File(getTemplate());
 		
 		if(!inputFile.exists()) {
@@ -53,6 +71,10 @@ public class TemplatablePackager extends Task {
 		
 		Element contentElem = inputDoc.select("body").first();
 
+		for(Element link : contentElem.select("img")) {
+			link.attr("src", "img/" + link.attr("src"));
+		}
+		
 		Element headerElem = contentElem.select(".maketitle").first();
 		Element titleElem = headerElem.select(".titleHead").first();
 		
@@ -66,7 +88,26 @@ public class TemplatablePackager extends Task {
 		addIfNotNull(authorElem, AUTHOR_NAME, articleData);
 		addIfNotNull(dateElem, DATE_NAME, articleData);
 		
-		fillOutTemplate(contentElem, articleData, inputFile);
+		fillOutTemplate(contentElem, articleData, inputFile, md);		
+	}
+	 
+	private void addMetaData(Map<String, String> articleData, Metadata data, String path) throws IOException {
+		PostEntry entry = new PostEntry();
+		entry.setName(articleData.get(TITLE_NAME));
+		entry.setDate(articleData.get(DATE_NAME));
+		entry.setAuthor(articleData.get(AUTHOR_NAME));
+		entry.setFilePath(path);
+	
+		
+		
+		int index = data.getEntries() != null ? data.getEntries().indexOf(entry) : -1;
+		if(index != -1) {
+			data.getEntries().set(index, entry);
+		} else {
+			data.getEntries().add(entry);
+		}
+		
+		data.persist();
 	}
 	
 	private void addIfNotNull(Element value, String key, Map<String, String> parsedItems) {
@@ -77,9 +118,11 @@ public class TemplatablePackager extends Task {
 		parsedItems.put(key, value.text());
 	}
 	
-	private void fillOutTemplate(Element content, Map<String, String> articleData, File inputFile) throws IOException {
+	private void fillOutTemplate(Element content, Map<String, String> articleData, File inputFile, Metadata md) throws IOException {
 		String fileName = inputFile.getName();
 		File outputFile = new File(getOutputDir(), fileName);
+	
+		addMetaData(articleData, md, outputFile.getAbsolutePath());
 		
 		if(content != null) {
 			PrintWriter writer = new PrintWriter(new FileOutputStream(outputFile));
@@ -130,7 +173,7 @@ public class TemplatablePackager extends Task {
 		templatePackager.setOutputDir(outputDir);
 		
 		try {
-			templatePackager.processFile();
+			templatePackager.process();
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
@@ -140,7 +183,7 @@ public class TemplatablePackager extends Task {
 	@Override
 	public void execute() throws BuildException {
 		try {
-			processFile();
+			process();
 		} catch(IOException e) {
 			throw new BuildException(e);
 		}

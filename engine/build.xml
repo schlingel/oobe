@@ -1,11 +1,18 @@
 <project name="oobe" default="publish">
 	<property file="config.properties" />
 	
+	<taskdef name="repackage-websites" classname="at.fundev.oobe.TemplatablePackager" classpath="${oobe.ant.jar.path}" />
+	
 	<target name="clean">
-		<delete dir="build" />
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+    	<mkdir dir="${dist.dir}/css" />
+    	<mkdir dir="${dist.dir}/img" />
+    	<mkdir dir="${dist.dir}/pdf" />
 	</target>
 	
     <target name="prepare-blog-creation" depends="clean">
+    	<mkdir dir="${dist.dir}" />
         <mkdir dir="${build.dir}" />
     	<mkdir dir="${build.dir}/css" />
     	<mkdir dir="${build.dir}/img" />
@@ -54,6 +61,22 @@
 				<include name="**/*.pdf" />
 			</fileset>
 		</copy>
+		
+		<repackage-websites 
+			input="${build.dir}"
+			outputdir="${dist.dir}"
+			template="${template.file}"
+			/>
+		
+		<copy todir="${dist.dir}/img">
+			<fileset dir="${build.dir}/img"></fileset>
+		</copy>
+		<copy todir="${dist.dir}/css">
+			<fileset dir="${build.dir}/css"></fileset>
+		</copy>
+		<copy todir="${dist.dir}/pdf">
+			<fileset dir="${build.dir}/pdf"></fileset>
+		</copy>		
 	</target>
 	
 	<target name="publish" depends="compile-articles">
@@ -65,5 +88,5 @@
 	<target name="push-to-server">
 		<echo>TODO: write ftp target</echo>
 	</target>
-		
+	
 </project>
