@@ -53,7 +53,7 @@ public class Metadata {
 			data.setEntries(file.getEntries());
 			return data;
 		} catch (FileNotFoundException e) {
-			return null;
+			return new Metadata(path);
 		}
 	};
 }

@@ -71,6 +71,10 @@ public class TemplatablePackager extends Task implements Constants {
 		
 		Element contentElem = inputDoc.select("body").first();
 
+		for(Element link : contentElem.select("img")) {
+			link.attr("src", "img/" + link.attr("src"));
+		}
+		
 		Element headerElem = contentElem.select(".maketitle").first();
 		Element titleElem = headerElem.select(".titleHead").first();
 		
@@ -94,7 +98,9 @@ public class TemplatablePackager extends Task implements Constants {
 		entry.setAuthor(articleData.get(AUTHOR_NAME));
 		entry.setFilePath(path);
 	
-		int index = data.getEntries().indexOf(entry);
+		
+		
+		int index = data.getEntries() != null ? data.getEntries().indexOf(entry) : -1;
 		if(index != -1) {
 			data.getEntries().set(index, entry);
 		} else {

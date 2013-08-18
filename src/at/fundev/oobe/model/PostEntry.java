@@ -65,7 +65,11 @@ public class PostEntry {
 	public boolean equals(Object obj) {
 		if(obj != null && obj instanceof PostEntry) {
 			PostEntry entry = (PostEntry)obj;
-			return entry.getAuthor().equals(author) && entry.getName().equals(name);
+			String author = entry.getAuthor();
+			String name = entry.getName();
+			
+			return (this.author != null && this.author.equals(author) || author == this.author) &&
+					(this.name != null && this.name.equals(name) || name == this.name);
 		}
 		
 		return false;
