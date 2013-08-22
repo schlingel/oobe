@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 set START_DIR=%~dp0
 set ARTICLESDIR=%1
 set TARGET_DIR=%2

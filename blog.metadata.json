@@ -1,0 +1,10 @@
+{
+  "path": "blog.metadata.json",
+  "entries": [
+    {
+      "name": "Some title",
+      "date": "22.12.2013",
+      "filePath": "e:\\Users\\zombie\\Documents\\Test\\output\\test.html"
+    }
+  ]
+}
