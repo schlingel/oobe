@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +21,7 @@ import org.jsoup.nodes.Element;
 
 import at.fundev.oobe.model.Metadata;
 import at.fundev.oobe.model.PostEntry;
+import at.fundev.oobe.utils.EncodingDetector;
 
 public class TemplatablePackager extends Task implements Constants {
 	private String input;
@@ -66,11 +68,18 @@ public class TemplatablePackager extends Task implements Constants {
 			throw new FileNotFoundException(String.format("The template file %s doesn't exist.", templateFile.getName()));
 		}
 		
-		Document inputDoc = Jsoup.parse(inputFile, "UTF-8");
+		String charset = EncodingDetector.of(inputFile).getEncoding();
+		charset = charset != null ? charset : EncodingDetector.DEFAULT_ENCODING; // default to UTF-8 and hope for the best
+		
+		System.out.println("Detected charset : " + charset);
+		
+		Document inputDoc = Jsoup.parse(inputFile, charset);
 		Map<String, String> articleData = new HashMap<String, String>();
 		
 		Element contentElem = inputDoc.select("body").first();
 
+		System.out.println(contentElem.text());
+		
 		for(Element link : contentElem.select("img")) {
 			link.attr("src", "img/" + link.attr("src"));
 		}
@@ -91,6 +100,17 @@ public class TemplatablePackager extends Task implements Constants {
 		fillOutTemplate(contentElem, articleData, inputFile, md);		
 	}
 	 
+	private String sanitizeSpecialChars(String input) {
+		
+		return (input == null) ? null : input.replace("ä", "&auml;")
+												.replace("Ä", "&Auml;")
+												.replace("ö", "&ouml;")
+												.replace("Ö", "&Ouml;")
+												.replace("ü", "&uuml;")
+												.replace("Ü", "&Uuml;")
+												.replace("ß", "&szlig;");
+	}
+	
 	private void addMetaData(Map<String, String> articleData, Metadata data, String path) throws IOException {
 		PostEntry entry = new PostEntry();
 		entry.setName(articleData.get(TITLE_NAME));
@@ -98,9 +118,8 @@ public class TemplatablePackager extends Task implements Constants {
 		entry.setAuthor(articleData.get(AUTHOR_NAME));
 		entry.setFilePath(path);
 	
-		
-		
 		int index = data.getEntries() != null ? data.getEntries().indexOf(entry) : -1;
+
 		if(index != -1) {
 			data.getEntries().set(index, entry);
 		} else {
@@ -125,14 +144,14 @@ public class TemplatablePackager extends Task implements Constants {
 		addMetaData(articleData, md, outputFile.getAbsolutePath());
 		
 		if(content != null) {
-			PrintWriter writer = new PrintWriter(new FileOutputStream(outputFile));
+			PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outputFile), EncodingDetector.DEFAULT_ENCODING));
 			String contentHtml = getTemplateText();
 			
 			for(String key : articleData.keySet()) {
 				contentHtml = contentHtml.replace(key, articleData.get(key));
 			}
 			
-			contentHtml = contentHtml.replace(CONTENT_NAME, content.html());
+			contentHtml = contentHtml.replace(CONTENT_NAME, sanitizeSpecialChars(content.html()));
 			
 			writer.write(contentHtml);
 			writer.flush();
@@ -145,7 +164,12 @@ public class TemplatablePackager extends Task implements Constants {
 	}
 	
 	private String getTemplateText() throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(getTemplate())));
+		
+		File templateFile = new File(template);
+		String charset = EncodingDetector.of(templateFile).getEncoding();
+		charset = (charset == null) ? EncodingDetector.DEFAULT_ENCODING : charset;
+		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(templateFile), charset));
 		StringBuffer buf = new StringBuffer();
 		String cur = null;
 		
