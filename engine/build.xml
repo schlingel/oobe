@@ -53,9 +53,12 @@
 		</exec>
 	</target>
 	
+	<target name="create-article" description="This creates the new tex-file without adding it to the article register.">
+		<copy file="${article.template.file}" tofile="${articles.dir}/${article.name}.tex" />
+		<echo message="Created ${article.name}.tex in ${articles.dir}." />
+	</target>
+	
 	<target name="prepare-publishing">
-		<echo message="${basedir}" />
-		
 		<copy todir="${build.dir}/pdf">
 			<fileset dir="${basedir}">
 				<include name="**/*.pdf" />
@@ -86,7 +89,13 @@
 	</target>
 	
 	<target name="push-to-server">
-		<echo>TODO: write ftp target</echo>
+		<ftp server="${ftp.server}"
+			userid="${ftp.userid}"
+			password="${ftp.password}"
+			remotedir="${ftp.remotedir}">
+			
+			<fileset dir="${dist.dir}" />
+		</ftp>
 	</target>
 	
 </project>

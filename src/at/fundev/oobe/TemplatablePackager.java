@@ -71,8 +71,6 @@ public class TemplatablePackager extends Task implements Constants {
 		String charset = EncodingDetector.of(inputFile).getEncoding();
 		charset = charset != null ? charset : EncodingDetector.DEFAULT_ENCODING; // default to UTF-8 and hope for the best
 		
-		System.out.println("Detected charset : " + charset);
-		
 		Document inputDoc = Jsoup.parse(inputFile, charset);
 		Map<String, String> articleData = new HashMap<String, String>();
 		
