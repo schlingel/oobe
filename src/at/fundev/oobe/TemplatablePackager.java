@@ -76,8 +76,6 @@ public class TemplatablePackager extends Task implements Constants {
 		
 		Element contentElem = inputDoc.select("body").first();
 
-		System.out.println(contentElem.text());
-		
 		for(Element link : contentElem.select("img")) {
 			link.attr("src", "img/" + link.attr("src"));
 		}
