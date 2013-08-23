@@ -85,8 +85,8 @@ public class TemplatablePackager extends Task implements Constants {
 		Element headerElem = contentElem.select(".maketitle").first();
 		Element titleElem = headerElem.select(".titleHead").first();
 		
+		Element authorElem = headerElem.select(".author").first();
 		
-		Element authorElem = headerElem.select(".author.cmr-12").first();
 		Element dateElem = headerElem.select(".date").first();
 		
 		headerElem.remove();
